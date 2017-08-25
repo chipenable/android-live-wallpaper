@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Trenette</string>
+    <string name="author">Pavel Bobkov</string>
 </resources>
