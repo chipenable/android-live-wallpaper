@@ -22,15 +22,14 @@ public class Wallpaper {
     private LineSegment path;
     private long liveTime;
     private double delta;
+    private float alphaDelta;
+    private float alpha;
     private double l;
-    private double pathLength;
     private double sinValue;
     private double cosValue;
     private Paint paint;
     private long time;
-    private long fadeTimeThreshold;
     private State state;
-    private Coordinate curPoint;
     private FadeOutListener fadeOutListener;
 
     public interface FadeOutListener{
@@ -42,8 +41,12 @@ public class Wallpaper {
         this.path = path;
         this.liveTime = liveTime;
 
-        pathLength = path.getLength()/2;
+        double pathLength = path.getLength()/2;
         delta = pathLength/liveTime;
+
+        alphaDelta = ((float)MAX_ALPHA)/FADE_TIME;
+        alpha = 0;
+
         l = 0;
 
         sinValue = Math.sin(angle);
@@ -52,44 +55,37 @@ public class Wallpaper {
         paint.setColor(0xff00ff00);
         paint.setAlpha(0);
 
-        fadeTimeThreshold = liveTime - FADE_TIME;
         state = State.FADE_IN;
-        curPoint = new Coordinate(path.p0.x, path.p0.y);
     }
 
     public void setFadeOutListener(FadeOutListener listener){
         fadeOutListener = listener;
     }
 
-    public void draw(Canvas canvas, long deltaTime){
+    public void draw(Canvas canvas, int deltaTime){
         time += deltaTime;
 
         if (!isStopped()) {
-
+            fade(time, deltaTime);
             double x = l * cosValue + path.p0.x;
             double y = l * sinValue + path.p0.y;
             canvas.drawBitmap(bitmap, (float)x, (float)y, paint);
             //canvas.drawLine((float)path.p0.x, (float)path.p0.y, (float)path.p1.x, (float)path.p1.y, paint);
             l += (delta * deltaTime);
-
-            fade(time, deltaTime);
         }
 
     }
 
-    private void fade(long time, long deltaTime){
-        int alpha;
+    private void fade(long time, int deltaTime){
 
         switch(state){
             case FADE_IN:
-                alpha = paint.getAlpha();
-                alpha += (MAX_ALPHA/(FADE_TIME/deltaTime));
-                alpha = alpha > MAX_ALPHA? MAX_ALPHA : alpha;
-                paint.setAlpha(alpha);
-
-                if (alpha == MAX_ALPHA){
+                alpha += (alphaDelta * deltaTime);
+                if (alpha > MAX_ALPHA){
+                    alpha = MAX_ALPHA;
                     state = State.MOVE;
                 }
+                paint.setAlpha((int)alpha);
                 break;
 
             case MOVE:
@@ -102,14 +98,12 @@ public class Wallpaper {
                 break;
 
             case FADE_OUT:
-                alpha = paint.getAlpha();
-                alpha -= (MAX_ALPHA/(FADE_TIME/deltaTime));
-                alpha = alpha < 0? 0 : alpha;
-                paint.setAlpha(alpha);
-
-                if (alpha == 0){
+                alpha -= (alphaDelta * deltaTime);
+                if (alpha < 0){
+                    alpha = 0;
                     state = State.STOPPED;
                 }
+                paint.setAlpha((int)alpha);
                 break;
 
             case STOPPED:

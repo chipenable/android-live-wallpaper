@@ -1,17 +1,20 @@
 package ru.chipenable.trenette;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.os.Looper;
-import android.support.constraint.solver.widgets.Rectangle;
+import android.util.Log;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineSegment;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,15 +32,14 @@ public class ImageController implements Wallpaper.FadeOutListener {
 
     private enum State {INIT, MOVE}
 
+    private final String TAG = getClass().getName();
+    private final int UPDATE_PERIOD = 16;
+
     private State state;
     private Point center;
     private Random random;
-    private Paint paint;
-    private Rectangle rect;
     private Paint rectPaint;
     private IImageRepo repo;
-    private Coordinate endPoint;
-    private Coordinate startPoint;
     private Looper looper;
     private int canvasWidth;
     private int canvasHeight;
@@ -61,8 +63,6 @@ public class ImageController implements Wallpaper.FadeOutListener {
 
         state = State.INIT;
         random = new Random();
-        paint = new Paint();
-        paint.setColor(0xfa00ff00);
         rectPaint = new Paint();
         rectPaint.setColor(0xffff0000);
         wallpaperList = new ArrayList<>();
@@ -79,8 +79,8 @@ public class ImageController implements Wallpaper.FadeOutListener {
                 int w = canvas.getWidth();
                 int h = canvas.getHeight();
 
-                /*center = new Point(500, 300);
-                canvasWidth = 400;
+               /* center = new Point(300, 200);
+                canvasWidth = 500;
                 canvasHeight = 300;*/
 
                 center = new Point(0, 0);
@@ -105,12 +105,12 @@ public class ImageController implements Wallpaper.FadeOutListener {
                 rectPaint.setStyle(Paint.Style.STROKE);
 
                 for (Wallpaper w : wallpaperList) {
-                    w.draw(canvas, deltaTime);
+                    w.draw(canvas, (int)deltaTime);
                 }
 
                 /*canvas.drawRect(center.x, center.y, center.x + canvasWidth, center.y + canvasHeight, rectPaint);
-                canvas.drawRect(center.x - canvasWidth/2, center.y - canvasHeight/2,
-                        center.x + canvasWidth/2, center.y + canvasHeight/2, rectPaint);*/
+                canvas.drawRect(center.x - canvasWidth/4, center.y - canvasHeight/4,
+                        center.x + canvasWidth/4, center.y + canvasHeight/4, rectPaint);*/
 
                 canvas.restore();
 
@@ -125,8 +125,8 @@ public class ImageController implements Wallpaper.FadeOutListener {
             }
         }
 
-
-        return 16;
+        long error = deltaTime > UPDATE_PERIOD? deltaTime - UPDATE_PERIOD:0;
+        return error > UPDATE_PERIOD? UPDATE_PERIOD: UPDATE_PERIOD - (int)error;
     }
 
     @Override
@@ -140,9 +140,12 @@ public class ImageController implements Wallpaper.FadeOutListener {
     private Observable<Wallpaper> createWallpaper(int canvasWidth, int canvasHeight) {
         return Observable.fromCallable(() -> {
 
+            int w = canvasWidth/4;
+            int h = canvasHeight/4;
+
             double angle = angles[random.nextInt(angles.length)];
-            endPoint = calcIntersectionPoint(canvasWidth, canvasHeight, angle);
-            startPoint = calcIntersectionPoint(canvasWidth, canvasHeight, angle + Math.PI);
+            Coordinate endPoint = calcIntersectionPoint(2*w, 2*h, angle);
+            Coordinate startPoint = calcIntersectionPoint(2*w, 2*h, angle + Math.PI);
 
             endPoint.x += center.x;
             endPoint.y += center.y;
@@ -152,7 +155,17 @@ public class ImageController implements Wallpaper.FadeOutListener {
             startPoint.y = startPoint.y > center.y? center.y:startPoint.y;
 
             Bitmap image = repo.getRandomImage();
-            image = Bitmap.createScaledBitmap(image, (3 * canvasWidth)/2, (3 * canvasHeight)/2, false);
+            float imageWidth = image.getWidth();
+            float imageHeight = image.getHeight();
+            float xScaleFactor = (5 * w)/imageWidth;
+            float yScaleFactor = (5 * h)/imageHeight;
+            float scaleFactor = Math.max(xScaleFactor, yScaleFactor);
+            image = Bitmap.createScaledBitmap(image, (int)(imageWidth * scaleFactor),
+                    (int)(imageHeight * scaleFactor), false);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            image.compress(Bitmap.CompressFormat.JPEG, 50, out);
+            image = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));
+
             LineSegment path = new LineSegment(startPoint, endPoint);
             Wallpaper nextWallpaper = new Wallpaper(angle, image, path, 10000);
             nextWallpaper.setFadeOutListener(ImageController.this);

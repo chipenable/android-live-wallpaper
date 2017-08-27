@@ -4,6 +4,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import ru.chipenable.trenette.R;
@@ -14,27 +16,30 @@ import ru.chipenable.trenette.R;
 
 public class ImageRepo implements IImageRepo {
 
-    private final Resources resources;
     private final Random random;
-    private final int[] images = {
-            R.drawable.carissa_gan_76325,
-            R.drawable.eaters_collective_132772,
-            R.drawable.eaters_collective_132773,
-            R.drawable.jakub_kapusnak_296128
-    };
-
-    /*private final int[] images = {
-            R.drawable.test_wallpaper
-    };*/
+    private List<IImageKeeper> images;
 
     public ImageRepo(Resources resources){
-        this.resources = resources;
         random = new Random();
+        images = new ArrayList<>();
+
+        int[] localImageIds = {
+                R.drawable.carissa_gan_76325,
+                R.drawable.eaters_collective_132772,
+                R.drawable.eaters_collective_132773,
+                R.drawable.jakub_kapusnak_296128
+        };
+
+        for(int imageId: localImageIds){
+            images.add(new InternalImage(resources, imageId));
+        }
     }
 
     @Override
     public Bitmap getRandomImage() {
-        int imageId = images[random.nextInt(images.length)];
-        return BitmapFactory.decodeResource(resources, imageId);
+        int randomIndex = random.nextInt(images.size());
+        IImageKeeper imageKeeper = images.get(randomIndex);
+        return imageKeeper.getImage();
     }
+
 }

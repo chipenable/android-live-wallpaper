@@ -25,9 +25,9 @@ public class CustomWallpaperService extends WallpaperService {
 
     private class ImageSetEngine extends Engine {
 
-        private Runnable imageTask;
-        private Handler handler;
-        private ImageController imageController;
+        private final Runnable imageTask;
+        private final Handler handler;
+        private final ImageController imageController;
 
         public ImageSetEngine(){
             imageController = new ImageController(imageRepo, getMainLooper());
@@ -50,7 +50,7 @@ public class CustomWallpaperService extends WallpaperService {
             final SurfaceHolder holder = getSurfaceHolder();
 
             Canvas canvas = null;
-            int delay = -1;
+            int delay = 0;
             try {
                 canvas = holder.lockCanvas();
                 if (canvas != null) {
