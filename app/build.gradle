@@ -30,7 +30,7 @@ android {
         }
 
         remote{
-            buildConfigField 'String', 'BASE_URL', "\"http://localhost:8080/pavel_b\""
+            buildConfigField 'String', 'BASE_URL', "\"http://truvorskameikin.com/pavel_b\""
         }
     }
 
