@@ -1,10 +1,9 @@
-package ru.chipenable.trenette;
+package ru.chipenable.trenette.wallpaper;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineSegment;
 
 /**
@@ -43,17 +42,15 @@ public class Wallpaper {
 
         double pathLength = path.getLength()/2;
         delta = pathLength/liveTime;
-
         alphaDelta = ((float)MAX_ALPHA)/FADE_TIME;
         alpha = 0;
-
         l = 0;
 
         sinValue = Math.sin(angle);
         cosValue = Math.cos(angle);
         paint = new Paint();
         paint.setColor(0xff00ff00);
-        paint.setAlpha(0);
+        paint.setAlpha((int)alpha);
 
         state = State.FADE_IN;
     }
@@ -66,7 +63,7 @@ public class Wallpaper {
         time += deltaTime;
 
         if (!isStopped()) {
-            fade(time, deltaTime);
+            lifeCycle(time, deltaTime);
             double x = l * cosValue + path.p0.x;
             double y = l * sinValue + path.p0.y;
             canvas.drawBitmap(bitmap, (float)x, (float)y, paint);
@@ -76,7 +73,13 @@ public class Wallpaper {
 
     }
 
-    private void fade(long time, int deltaTime){
+    public void recycle(){
+        bitmap.recycle();
+        path = null;
+        paint = null;
+    }
+
+    private void lifeCycle(long time, int deltaTime){
 
         switch(state){
             case FADE_IN:

@@ -19,7 +19,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug{
-            debuggable = false
+            debuggable = true
+        }
+
+    }
+
+    productFlavors{
+        local{
+            buildConfigField 'String', 'BASE_URL', "\"http://192.168.1.44:8080/pavel_b\""
+        }
+
+        remote{
+            buildConfigField 'String', 'BASE_URL', "\"http://localhost:8080/pavel_b\""
         }
     }
 
@@ -42,4 +53,9 @@ dependencies {
     compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
     compile 'io.reactivex.rxjava2:rxjava:2.1.0'
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'com.squareup.okhttp3:okhttp:3.4.2'
+    compile 'com.evernote:android-job:1.1.11'
+    compile 'com.google.dagger:dagger:2.11-rc2'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.11-rc2'
+
 }

@@ -1,4 +1,4 @@
-package ru.chipenable.trenette.data;
+package ru.chipenable.trenette.repo;
 
 import android.graphics.Bitmap;
 

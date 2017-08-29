@@ -3,10 +3,8 @@
           xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.SET_WALLPAPER"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
 
     <uses-feature
         android:name="android.software.live_wallpaper"
@@ -14,6 +12,7 @@
     </uses-feature>
 
     <application
+        android:name=".Trenette"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -22,7 +21,7 @@
         android:theme="@style/AppTheme">
 
         <service
-            android:name=".CustomWallpaperService"
+            android:name=".wallpaper.CustomWallpaperService"
             android:permission="android.permission.BIND_WALLPAPER"
             android:enabled="true"
             android:exported="true">

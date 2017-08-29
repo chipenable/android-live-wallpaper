@@ -1,64 +1,80 @@
-package ru.chipenable.trenette;
+package ru.chipenable.trenette.wallpaper;
 
 import android.graphics.Canvas;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
-import ru.chipenable.trenette.data.IImageRepo;
-import ru.chipenable.trenette.data.ImageRepo;
+import javax.inject.Inject;
+
+import ru.chipenable.trenette.Trenette;
 
 public class CustomWallpaperService extends WallpaperService {
 
-    private IImageRepo imageRepo;
+    private final String TAG = getClass().getName();
+
+    @Inject
+    WallpaperController imageController;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        imageRepo = new ImageRepo(getApplicationContext().getResources());
+        Trenette app = (Trenette)getApplication();
+        app.getAppComponent().inject(this);
     }
 
     @Override
     public Engine onCreateEngine() {
-        return new ImageSetEngine();
+        return new ImageSetEngine(imageController);
     }
 
     private class ImageSetEngine extends Engine {
 
         private final Runnable imageTask;
         private final Handler handler;
-        private final ImageController imageController;
+        private final WallpaperController controller;
 
-        public ImageSetEngine(){
-            imageController = new ImageController(imageRepo, getMainLooper());
+        public ImageSetEngine(WallpaperController controller){
+            this.controller = controller;
             handler = new Handler();
             imageTask = this::drawImage;
         }
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            super.onVisibilityChanged(visible);
+            if (visible) {
+                handler.post(imageTask);
+            } else {
+                handler.removeCallbacks(imageTask);
+            }
+        }
+
+        public void onSurfaceDestroyed(SurfaceHolder holder) {
+            super.onSurfaceDestroyed(holder);
+            handler.removeCallbacks(imageTask);
         }
 
         @Override
-        public void onSurfaceCreated(SurfaceHolder holder) {
-            super.onSurfaceCreated(holder);
-            drawImage();
+        public void onDestroy() {
+            super.onDestroy();
+            handler.removeCallbacks(imageTask);
         }
 
         void drawImage() {
             final SurfaceHolder holder = getSurfaceHolder();
 
             Canvas canvas = null;
-            int delay = 0;
+            int delay = -1;
             try {
                 canvas = holder.lockCanvas();
                 if (canvas != null) {
-                    delay = imageController.controller(canvas);
+                    delay = controller.drawWallpaper(canvas);
                 }
             } finally {
-                if (canvas != null)
+                if (canvas != null) {
                     holder.unlockCanvasAndPost(canvas);
+                }
             }
 
             if (delay >= 0) {
