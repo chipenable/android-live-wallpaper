@@ -147,8 +147,17 @@ public class WallpaperController implements Wallpaper.FadeOutListener {
             endPoint.y += center.y;
             startPoint.x += center.x;
             startPoint.y += center.y;
-            startPoint.x = startPoint.x > center.x? center.x:startPoint.x;
-            startPoint.y = startPoint.y > center.y? center.y:startPoint.y;
+
+            if (startPoint.x > center.x){
+                endPoint.x -= (startPoint.x - center.x);
+                startPoint.x = center.x;
+            }
+
+            if (startPoint.y > center.y){
+                endPoint.y -= (startPoint.y - center.y);
+                startPoint.y = center.y;
+            }
+
 
             //scale image - image must be (SCALE_FACTOR + 1) times bigger than canvas
             Bitmap originalBitmap = repo.getRandomImage();
